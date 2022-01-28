@@ -3,15 +3,26 @@ import arcade
 CHARACTER_SCALING = 0.5
 PLAYER_SPRITE_PATH = "sprites/PNG/Players/128x256/Green/alienGreen_stand.png"
 
+# PHYSICS
 PLAYER_MOVEMENT_SPEED = 10
 PLAYER_ACCELERATION = 0.9
 PLAYER_JUMP_SPEED = 20
+
+TEXTURE_RIGHT_INDEX = 0
+TEXTURE_LEFT_INDEX = 1
 
 
 class Player(arcade.Sprite):
 
     def __init__(self):
-        super().__init__(PLAYER_SPRITE_PATH, CHARACTER_SCALING)
+        super().__init__()
+
+        self.scale = CHARACTER_SCALING
+        self.textures = []
+
+        self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH))
+        self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH, flipped_horizontally=True))
+        self.texture = self.textures[0]
 
         # Key Tracking
         self.left_pressed = False
@@ -50,10 +61,11 @@ class Player(arcade.Sprite):
         if self.right_pressed and not self.left_pressed:
             self.apply_acceleration(True)
             # Apply right animation
-
+            self.texture = self.textures[TEXTURE_RIGHT_INDEX]
         elif self.left_pressed and not self.right_pressed:
             self.apply_acceleration(False)
             # Apply left animation
+            self.texture = self.textures[TEXTURE_LEFT_INDEX]
 
         else:
             self.coast()
