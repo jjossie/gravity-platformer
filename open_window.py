@@ -3,8 +3,9 @@ import arcade
 # Constants
 
 # Window Options
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
+LAYER_NAME_DEPTH = "depth"
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 768
 SCREEN_TITLE = "Platformer"
 
 # Scaling
@@ -38,7 +39,7 @@ class MyGame(arcade.Window):
     def __init__(self) -> None:
         # Create this Arcade Window but do not display it yet
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-        arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
+        # arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
         # Arcade Objects
         self.scene = None
@@ -70,7 +71,10 @@ class MyGame(arcade.Window):
         # Setup Tile Maps
         map_path = "maps/demo.tmx"
         layer_options = {
-            "platforms": {
+            LAYER_NAME_PLATFORMS: {
+                "use_spatial_hash": True
+            },
+            LAYER_NAME_BOXES: {
                 "use_spatial_hash": True
             }
         }
@@ -138,8 +142,6 @@ class MyGame(arcade.Window):
         if self.physics_engine.can_jump() and (self.up_pressed or self.space_pressed):
             self.player_sprite.change_y = PLAYER_JUMP_SPEED
 
-        print(self.player_sprite.change_x)
-
     def apply_acceleration(self, is_right):
         """Gradually increase the velocity of a particular axis."""
         if -PLAYER_MOVEMENT_SPEED < self.player_sprite.change_x < PLAYER_MOVEMENT_SPEED:
@@ -156,7 +158,10 @@ class MyGame(arcade.Window):
         elif self.player_sprite.change_x < 0:
             self.player_sprite.change_x += PLAYER_ACCELERATION
 
-    def camera_follow(self):
+    def camera_follow(self, parallax=1):
+        self.camera.move_to(self.get_camera_position(1))
+
+    def get_camera_position(self, parallax=1):
         screen_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
         screen_center_y = self.player_sprite.center_y - (self.camera.viewport_height / 2)
 
@@ -166,7 +171,7 @@ class MyGame(arcade.Window):
         if screen_center_y < 0:
             screen_center_y = 0
 
-        self.camera.move_to((screen_center_x, screen_center_y))
+        return screen_center_x * parallax, screen_center_y * parallax
 
     def on_draw(self):
         """Render the screen."""
@@ -174,7 +179,7 @@ class MyGame(arcade.Window):
         # Clear the screen to the background color
         arcade.start_render()
 
-        # Activate the game camera
+        # Activate the game cameras
         self.camera.use()
 
         # Draw the Scene
