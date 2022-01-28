@@ -1,5 +1,7 @@
 import arcade
 
+from player import Player
+
 # Constants
 
 # Window Options
@@ -9,15 +11,12 @@ SCREEN_HEIGHT = 768
 SCREEN_TITLE = "Platformer"
 
 # Scaling
-CHARACTER_SCALING = 0.5
 TILE_SCALING = 0.5
 COIN_SCALING = 0.5
 
 # Physics
-PLAYER_MOVEMENT_SPEED = 10
-PLAYER_ACCELERATION = 0.9
+
 GRAVITY = 1
-PLAYER_JUMP_SPEED = 20
 
 # Layer Names
 LAYER_NAME_PLAYER = "player"
@@ -39,7 +38,6 @@ class MyGame(arcade.Window):
     def __init__(self) -> None:
         # Create this Arcade Window but do not display it yet
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-        # arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
         # Arcade Objects
         self.scene = None
@@ -48,13 +46,6 @@ class MyGame(arcade.Window):
         self.camera = None
         self.gui_camera = None
         self.tile_map = None
-
-        # Key Tracking
-        self.left_pressed = False
-        self.right_pressed = False
-        self.up_pressed = False
-        self.down_pressed = False
-        self.space_pressed = False
 
         # Game Logic
         self.score = 0
@@ -92,9 +83,8 @@ class MyGame(arcade.Window):
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # Create Sprites
-        player_sprite_path = "sprites/PNG/Players/128x256/Green/alienGreen_stand.png"
-        self.player_sprite = arcade.Sprite(player_sprite_path, CHARACTER_SCALING)
-        self.player_sprite.center_x = 128
+        self.player_sprite = Player()
+        self.player_sprite.center_x = 192
         self.player_sprite.center_y = 256
         self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_sprite)
 
@@ -112,65 +102,11 @@ class MyGame(arcade.Window):
 
     def on_key_press(self, key: int, modifiers: int):
         """Called whenever a key is pressed."""
-
-        if key in [arcade.key.UP, arcade.key.W]:
-            self.up_pressed = True
-        if key in [arcade.key.DOWN, arcade.key.S]:
-            self.down_pressed = True
-        if key in [arcade.key.LEFT, arcade.key.A]:
-            self.left_pressed = True
-        if key in [arcade.key.RIGHT, arcade.key.D]:
-            self.right_pressed = True
-        if key == arcade.key.SPACE:
-            self.space_pressed = True
+        self.player_sprite.on_key_press(key)
 
     def on_key_release(self, key: int, modifiers: int):
         """Called whenever a key is released."""
-
-        if key in [arcade.key.LEFT, arcade.key.A]:
-            self.left_pressed = False
-        if key in [arcade.key.RIGHT, arcade.key.D]:
-            self.right_pressed = False
-        if key in [arcade.key.UP, arcade.key.W]:
-            self.up_pressed = False
-        if key in [arcade.key.DOWN, arcade.key.S]:
-            self.down_pressed = False
-        if key == arcade.key.SPACE:
-            self.space_pressed = False
-
-    def update_player_speed(self):
-        """Calculate new movement speed every frame."""
-
-        if self.right_pressed and not self.left_pressed:
-            self.apply_acceleration(True)
-            # Apply right animation
-
-        elif self.left_pressed and not self.right_pressed:
-            self.apply_acceleration(False)
-            # Apply left animation
-
-        else:
-            self.coast()
-
-        if self.physics_engine.can_jump() and (self.up_pressed or self.space_pressed):
-            self.player_sprite.change_y = PLAYER_JUMP_SPEED
-
-    def apply_acceleration(self, is_right):
-        """Gradually increase the velocity of the player along the x-axis."""
-        if -PLAYER_MOVEMENT_SPEED < self.player_sprite.change_x < PLAYER_MOVEMENT_SPEED:
-            if is_right:
-                self.player_sprite.change_x += PLAYER_ACCELERATION
-            else:
-                self.player_sprite.change_x -= PLAYER_ACCELERATION
-
-    def coast(self):
-        """Gradually decrease velocity until we come to a standstill."""
-        if -PLAYER_ACCELERATION < self.player_sprite.change_x < PLAYER_ACCELERATION:
-            self.player_sprite.change_x = 0
-        elif self.player_sprite.change_x > 0:
-            self.player_sprite.change_x -= PLAYER_ACCELERATION
-        elif self.player_sprite.change_x < 0:
-            self.player_sprite.change_x += PLAYER_ACCELERATION
+        self.player_sprite.on_key_release(key)
 
     def camera_follow(self, parallax=1):
         self.camera.move_to(self.get_camera_position(1))
@@ -220,7 +156,7 @@ class MyGame(arcade.Window):
         """Movement and game logic."""
 
         # Move the player with the physics engine.
-        self.update_player_speed()
+        self.player_sprite.update_speed(self.physics_engine)
         self.physics_engine.update()
 
         # Center the camera on the player.
