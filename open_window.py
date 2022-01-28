@@ -74,6 +74,12 @@ class MyGame(arcade.Window):
             LAYER_NAME_PLATFORMS: {
                 "use_spatial_hash": True
             },
+            LAYER_NAME_ITEMS: {
+                "use_spatial_hash": True
+            },
+            LAYER_NAME_DEPTH: {
+                "use_spatial_hash": True
+            },
             LAYER_NAME_BOXES: {
                 "use_spatial_hash": True
             }
@@ -94,7 +100,10 @@ class MyGame(arcade.Window):
 
         # Initialize Physics Engine
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite, gravity_constant=GRAVITY, walls=self.scene["platforms"]
+            self.player_sprite, gravity_constant=GRAVITY, walls=[
+                self.scene[LAYER_NAME_PLATFORMS],
+                self.scene[LAYER_NAME_BOXES]
+            ]
         )
 
         # Game Logic
@@ -130,12 +139,16 @@ class MyGame(arcade.Window):
             self.space_pressed = False
 
     def update_player_speed(self):
-        """Calculate new movement speed every time a key is pressed/released"""
+        """Calculate new movement speed every frame."""
 
         if self.right_pressed and not self.left_pressed:
             self.apply_acceleration(True)
+            # Apply right animation
+
         elif self.left_pressed and not self.right_pressed:
             self.apply_acceleration(False)
+            # Apply left animation
+
         else:
             self.coast()
 
@@ -143,7 +156,7 @@ class MyGame(arcade.Window):
             self.player_sprite.change_y = PLAYER_JUMP_SPEED
 
     def apply_acceleration(self, is_right):
-        """Gradually increase the velocity of a particular axis."""
+        """Gradually increase the velocity of the player along the x-axis."""
         if -PLAYER_MOVEMENT_SPEED < self.player_sprite.change_x < PLAYER_MOVEMENT_SPEED:
             if is_right:
                 self.player_sprite.change_x += PLAYER_ACCELERATION
@@ -151,6 +164,7 @@ class MyGame(arcade.Window):
                 self.player_sprite.change_x -= PLAYER_ACCELERATION
 
     def coast(self):
+        """Gradually decrease velocity until we come to a standstill."""
         if -PLAYER_ACCELERATION < self.player_sprite.change_x < PLAYER_ACCELERATION:
             self.player_sprite.change_x = 0
         elif self.player_sprite.change_x > 0:
@@ -189,6 +203,10 @@ class MyGame(arcade.Window):
         self.gui_camera.use()
 
         # Draw GUI
+        self.draw_gui()
+
+    def draw_gui(self):
+        """Display to the screen any text we need to."""
         score_text = f"Score: {self.score}"
         arcade.draw_text(
             score_text,
