@@ -16,7 +16,7 @@ COIN_SCALING = 0.5
 
 # Physics
 
-GRAVITY = 1
+GRAVITY = 1.5
 
 # Layer Names
 LAYER_NAME_PLAYER = "player"
@@ -83,22 +83,27 @@ class MyGame(arcade.Window):
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # Create Sprites
-        self.player_sprite = Player()
+        self.player_sprite = Player(window=self)
         self.player_sprite.center_x = 192
         self.player_sprite.center_y = 256
         self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_sprite)
 
         # Initialize Physics Engine
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite, gravity_constant=GRAVITY, walls=[
-                self.scene[LAYER_NAME_PLATFORMS],
-                self.scene[LAYER_NAME_BOXES]
-            ]
-        )
+        self.initialize_physics()
 
         # Game Logic
         self.score = 0
         self.max_score = COIN_VALUE * len(self.scene.get_sprite_list(LAYER_NAME_ITEMS))
+
+    def initialize_physics(self, inverted=False):
+        # Initialize Physics Engine
+        inv_int = -1 if inverted else 1
+        self.physics_engine = arcade.PhysicsEnginePlatformer(
+            self.player_sprite, gravity_constant=GRAVITY * inv_int, walls=[
+                self.scene[LAYER_NAME_PLATFORMS],
+                self.scene[LAYER_NAME_BOXES]
+            ]
+        )
 
     def on_key_press(self, key: int, modifiers: int):
         """Called whenever a key is pressed."""
