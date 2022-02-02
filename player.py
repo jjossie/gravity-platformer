@@ -93,7 +93,8 @@ class Player(arcade.Sprite):
             self.coast()
 
         if physics_engine.can_jump() and self.jump_pressed:
-            self.change_y = PLAYER_JUMP_SPEED
+            inv_int = -1 if self.gravity_inverted else 1
+            self.change_y = PLAYER_JUMP_SPEED * inv_int
 
     def apply_acceleration(self, is_right):
         """Gradually increase the velocity of the player along the x-axis."""
