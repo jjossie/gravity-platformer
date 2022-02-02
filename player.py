@@ -1,4 +1,5 @@
 import arcade
+from dataclasses import dataclass
 
 CHARACTER_SCALING = 0.5
 PLAYER_SPRITE_PATH = "sprites/PNG/Players/128x256/Green/alienGreen_stand.png"
@@ -14,6 +15,14 @@ TEXTURE_RIGHT_INVERTED_INDEX = 2
 TEXTURE_LEFT_INVERTED_INDEX = 3
 
 
+@dataclass
+class ControlSet:
+    jump: int = arcade.key.UP
+    left: int = arcade.key.LEFT
+    right: int = arcade.key.RIGHT
+    toggle_gravity: int = arcade.key.SPACE
+
+
 class Player(arcade.Sprite):
 
     def __init__(self, window):
@@ -27,48 +36,45 @@ class Player(arcade.Sprite):
         self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH))
         self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH, flipped_horizontally=True))
         self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH, flipped_vertically=True))
-        self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH, flipped_horizontally=True, flipped_vertically=True))
+        self.textures.append(arcade.load_texture(PLAYER_SPRITE_PATH,
+                                                 flipped_horizontally=True, flipped_vertically=True))
         self.texture = self.textures[0]
 
         # Key Tracking
         self.left_pressed = False
         self.right_pressed = False
-        self.up_pressed = False
+        self.jump_pressed = False
         self.down_pressed = False
-        self.space_pressed = False
+        self.invert_pressed = False
+        self.control_set = ControlSet()
 
         # Game Logic
         self.gravity_inverted = False
 
     def on_key_press(self, key: int):
-        if key in [arcade.key.UP, arcade.key.W]:
-            self.up_pressed = True
-        if key in [arcade.key.DOWN, arcade.key.S]:
-            self.down_pressed = True
-        if key in [arcade.key.LEFT, arcade.key.A]:
+        if key == self.control_set.jump:
+            self.jump_pressed = True
+        if key == self.control_set.left:
             self.left_pressed = True
-        if key in [arcade.key.RIGHT, arcade.key.D]:
+        if key == self.control_set.right:
             self.right_pressed = True
-        if key == arcade.key.SPACE:
-            self.space_pressed = True
-        if key == arcade.key.LSHIFT:
+        if key == self.control_set.toggle_gravity:
+            self.invert_pressed = True
             self.gravity_inverted = not self.gravity_inverted
             self.window.initialize_physics(self.gravity_inverted)
 
     def on_key_release(self, key: int):
-        if key in [arcade.key.LEFT, arcade.key.A]:
+        if key == self.control_set.left:
             self.left_pressed = False
-        if key in [arcade.key.RIGHT, arcade.key.D]:
+        if key == self.control_set.right:
             self.right_pressed = False
-        if key in [arcade.key.UP, arcade.key.W]:
-            self.up_pressed = False
-        if key in [arcade.key.DOWN, arcade.key.S]:
-            self.down_pressed = False
-        if key == arcade.key.SPACE:
-            self.space_pressed = False
+        if key == self.control_set.jump:
+            self.jump_pressed = False
+        if key == self.control_set.toggle_gravity:
+            self.invert_pressed = False
 
     def update_speed(self, physics_engine):
-        """Calculate new movement speed every frame."""
+        """Calculate new movement speed every frame. And set animations (extraneous cohesion, I know)."""
 
         if self.right_pressed and not self.left_pressed:
             self.apply_acceleration(True)
@@ -86,7 +92,7 @@ class Player(arcade.Sprite):
         else:
             self.coast()
 
-        if physics_engine.can_jump() and self.up_pressed:
+        if physics_engine.can_jump() and self.jump_pressed:
             self.change_y = PLAYER_JUMP_SPEED
 
     def apply_acceleration(self, is_right):

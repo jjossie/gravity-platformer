@@ -96,7 +96,7 @@ class MyGame(arcade.Window):
         self.max_score = COIN_VALUE * len(self.scene.get_sprite_list(LAYER_NAME_ITEMS))
 
     def initialize_physics(self, inverted=False):
-        # Initialize Physics Engine
+        """Initialize Physics Engine, allowing for inversion of gravity."""
         inv_int = -1 if inverted else 1
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite, gravity_constant=GRAVITY * inv_int, walls=[
@@ -113,7 +113,7 @@ class MyGame(arcade.Window):
         """Called whenever a key is released."""
         self.player_sprite.on_key_release(key)
 
-    def camera_follow(self, parallax=1):
+    def camera_follow(self):
         self.camera.move_to(self.get_camera_position(1))
 
     def get_camera_position(self, parallax=1):
