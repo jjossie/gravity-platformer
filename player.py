@@ -25,7 +25,7 @@ class ControlSet:
 
 class Player(arcade.Sprite):
 
-    def __init__(self, window):
+    def __init__(self, window: arcade.Window, control_set: ControlSet):
         super().__init__()
 
         self.window = window
@@ -46,7 +46,7 @@ class Player(arcade.Sprite):
         self.jump_pressed = False
         self.down_pressed = False
         self.invert_pressed = False
-        self.control_set = ControlSet()
+        self.control_set = control_set
 
         # Game Logic
         self.gravity_inverted = False

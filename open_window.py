@@ -1,6 +1,5 @@
 import arcade
-
-from player import Player
+from player import Player, ControlSet
 
 # Constants
 
@@ -41,7 +40,8 @@ class MyGame(arcade.Window):
 
         # Arcade Objects
         self.scene = None
-        self.player_sprite = None
+        self.player_one = None
+        self.player_two = None
         self.physics_engine = None
         self.camera = None
         self.gui_camera = None
@@ -83,10 +83,20 @@ class MyGame(arcade.Window):
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # Create Sprites
-        self.player_sprite = Player(window=self)
-        self.player_sprite.center_x = 192
-        self.player_sprite.center_y = 256
-        self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_sprite)
+        self.player_one = Player(self, ControlSet())
+        self.player_one.center_x = 192
+        self.player_one.center_y = 256
+        self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_one)
+        # player_two_control_set = ControlSet(
+        #     jump=arcade.key.W,
+        #     toggle_gravity=arcade.key.CAPSLOCK,
+        #     left=arcade.key.A,
+        #     right=arcade.key.D
+        # )
+        # self.player_two = Player(self, player_two_control_set)
+        # self.player_two.center_x = 296
+        # self.player_two.center_y = 512
+        # self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_two)
 
         # Initialize Physics Engine
         self.initialize_physics()
@@ -99,7 +109,7 @@ class MyGame(arcade.Window):
         """Initialize Physics Engine, allowing for inversion of gravity."""
         inv_int = -1 if inverted else 1
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite, gravity_constant=GRAVITY * inv_int, walls=[
+            self.player_one, gravity_constant=GRAVITY * inv_int, walls=[
                 self.scene[LAYER_NAME_PLATFORMS],
                 self.scene[LAYER_NAME_BOXES]
             ]
@@ -107,18 +117,18 @@ class MyGame(arcade.Window):
 
     def on_key_press(self, key: int, modifiers: int):
         """Called whenever a key is pressed."""
-        self.player_sprite.on_key_press(key)
+        self.player_one.on_key_press(key)
 
     def on_key_release(self, key: int, modifiers: int):
         """Called whenever a key is released."""
-        self.player_sprite.on_key_release(key)
+        self.player_one.on_key_release(key)
 
-    def camera_follow(self):
-        self.camera.move_to(self.get_camera_position(1))
+    def camera_follow(self, players):
+        self.camera.move_to(self.get_camera_position(), 0.1)
 
     def get_camera_position(self, parallax=1):
-        screen_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
-        screen_center_y = self.player_sprite.center_y - (self.camera.viewport_height / 2)
+        screen_center_x = self.player_one.center_x - (self.camera.viewport_width / 2)
+        screen_center_y = self.player_one.center_y - (self.camera.viewport_height / 2)
 
         # Don't let camera travel past 0
         if screen_center_x < 0:
@@ -161,15 +171,15 @@ class MyGame(arcade.Window):
         """Movement and game logic."""
 
         # Move the player with the physics engine.
-        self.player_sprite.update_speed(self.physics_engine)
+        self.player_one.update_speed(self.physics_engine)
         self.physics_engine.update()
 
         # Center the camera on the player.
-        self.camera_follow()
+        self.camera_follow([self.player_one])
 
         # Check for coin collisions
         coin_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite, self.scene[LAYER_NAME_ITEMS]
+            self.player_one, self.scene[LAYER_NAME_ITEMS]
         )
         for coin in coin_hit_list:
             # Remove the coin
@@ -180,7 +190,7 @@ class MyGame(arcade.Window):
 
         # Check for death
         death_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite, self.scene[LAYER_NAME_DEATH]
+            self.player_one, self.scene[LAYER_NAME_DEATH]
         )
         if len(death_hit_list) > 0:
             self.die()
