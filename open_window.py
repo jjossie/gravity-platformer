@@ -1,7 +1,9 @@
+from typing import Optional
+
 import arcade
 from player import Player, ControlSet
 
-# Constants
+# --- --- Constants
 
 # Window Options
 LAYER_NAME_DEPTH = "depth"
@@ -13,9 +15,28 @@ SCREEN_TITLE = "Platformer"
 TILE_SCALING = 0.5
 COIN_SCALING = 0.5
 
-# Physics
+# --- Physics forces. Higher number, faster accelerating.
 
-GRAVITY = 1.5
+# Gravity
+GRAVITY = 2600
+
+# Damping - Amount of speed lost per second
+DEFAULT_DAMPING = 1.0
+PLAYER_DAMPING = 0.4
+
+# Friction between objects
+PLAYER_FRICTION = 1.0
+WALL_FRICTION = 0.7
+DYNAMIC_ITEM_FRICTION = 0.6
+
+# Keep player from going too fast
+PLAYER_MAX_HORIZONTAL_SPEED = 650
+PLAYER_MAX_VERTICAL_SPEED = 1600
+
+# Mass (defaults to 1)
+PLAYER_MASS = 2.0
+
+# --- Visuals.
 
 # Layer Names
 LAYER_NAME_PLAYER = "player"
@@ -42,7 +63,8 @@ class MyGame(arcade.Window):
         self.scene = None
         self.player_one = None
         self.player_two = None
-        self.physics_engine = None
+        self.player_list = []
+        self.physics_engine: Optional[arcade.PymunkPhysicsEngine] = None
         self.camera = None
         self.gui_camera = None
         self.tile_map = None
@@ -82,10 +104,10 @@ class MyGame(arcade.Window):
         # Initialize Scene with tilemap
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
-        # Create Sprites
+        # Create Players
         self.player_one = Player(self, ControlSet())
         self.player_one.center_x = 192
-        self.player_one.center_y = 256
+        self.player_one.center_y = 768
         self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_one)
         # player_two_control_set = ControlSet(
         #     jump=arcade.key.W,
@@ -97,23 +119,40 @@ class MyGame(arcade.Window):
         # self.player_two.center_x = 296
         # self.player_two.center_y = 512
         # self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_two)
+        self.player_list.append(self.player_one)
 
         # Initialize Physics Engine
-        self.initialize_physics()
+        self.physics_engine = arcade.PymunkPhysicsEngine(
+            damping=DEFAULT_DAMPING,
+            gravity=(0, -GRAVITY)
+        )
+        # Add Player to physics
+        self.physics_engine.add_sprite(
+            self.player_one,
+            friction=PLAYER_FRICTION,
+            mass=PLAYER_MASS,
+            moment_of_intertia=arcade.PymunkPhysicsEngine.MOMENT_INF,
+            collision_type="player",
+            max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
+            max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED
+        )
+        # Add Other Layers to physics engine
+        self.physics_engine.add_sprite_list(
+            self.scene.get_sprite_list(LAYER_NAME_PLATFORMS),
+            friction=WALL_FRICTION,
+            collision_type="wall",
+            body_type=arcade.PymunkPhysicsEngine.STATIC
+        )
+        self.physics_engine.add_sprite_list(
+            self.scene.get_sprite_list(LAYER_NAME_BOXES),
+            friction=WALL_FRICTION,
+            collision_type="wall",
+            body_type=arcade.PymunkPhysicsEngine.STATIC
+        )
 
         # Game Logic
         self.score = 0
         self.max_score = COIN_VALUE * len(self.scene.get_sprite_list(LAYER_NAME_ITEMS))
-
-    def initialize_physics(self, inverted=False):
-        """Initialize Physics Engine, allowing for inversion of gravity."""
-        inv_int = -1 if inverted else 1
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_one, gravity_constant=GRAVITY * inv_int, walls=[
-                self.scene[LAYER_NAME_PLATFORMS],
-                self.scene[LAYER_NAME_BOXES]
-            ]
-        )
 
     def on_key_press(self, key: int, modifiers: int):
         """Called whenever a key is pressed."""
@@ -171,8 +210,8 @@ class MyGame(arcade.Window):
         """Movement and game logic."""
 
         # Move the player with the physics engine.
-        self.player_one.update_speed(self.physics_engine)
-        self.physics_engine.update()
+        self.player_one.update_movement(self.physics_engine)
+        self.physics_engine.step()
 
         # Center the camera on the player.
         self.camera_follow([self.player_one])
