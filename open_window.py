@@ -183,7 +183,9 @@ class MyGame(arcade.Window):
         )
         for coin in coin_hit_list:
             # Remove the coin
-            coin.remove_from_sprite_lists()
+            val = coin.properties
+            print(val)
+            coin.kill()
             self.score += COIN_VALUE
             if self.has_won():
                 self.win()
