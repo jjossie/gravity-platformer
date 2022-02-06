@@ -8,6 +8,9 @@ LAYER_NAME_DEPTH = "depth"
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 768
 SCREEN_TITLE = "Platformer"
+MAIN_MUSIC_PATH = "sounds/loom_loop.mp3"
+GLOBAL_SFX_VOLUME = 0.3
+GLOBAL_MUSIC_VOLUME = 0.8
 
 # Scaling
 TILE_SCALING = 0.5
@@ -51,6 +54,17 @@ class MyGame(arcade.Window):
         self.score = 0
         self.max_score = 0
 
+        # Load sounds
+        self.music = arcade.load_sound(MAIN_MUSIC_PATH, True)
+        self.coin_sound = arcade.load_sound(":resources:sounds/coin5.wav")
+        self.jump_sound = arcade.load_sound(":resources:sounds/jump4.wav")
+        self.gravity_sound = arcade.load_sound(":resources:sounds/upgrade4.wav")
+        self.death_sound = arcade.load_sound(":resources:sounds/error4.wav")
+        self.SFX_VOLUME = GLOBAL_SFX_VOLUME
+
+        # Play Music
+        arcade.play_sound(self.music, volume=GLOBAL_MUSIC_VOLUME, looping=True)
+
     def setup(self):
         """Set up the game here. Call this function to restart the game."""
 
@@ -87,16 +101,6 @@ class MyGame(arcade.Window):
         self.player_one.center_x = 192
         self.player_one.center_y = 256
         self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_one)
-        # player_two_control_set = ControlSet(
-        #     jump=arcade.key.W,
-        #     toggle_gravity=arcade.key.CAPSLOCK,
-        #     left=arcade.key.A,
-        #     right=arcade.key.D
-        # )
-        # self.player_two = Player(self, player_two_control_set)
-        # self.player_two.center_x = 296
-        # self.player_two.center_y = 512
-        # self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_two)
 
         # Initialize Physics Engine
         self.initialize_physics()
@@ -186,6 +190,7 @@ class MyGame(arcade.Window):
             val = coin.properties
             print(val)
             coin.kill()
+            arcade.play_sound(self.coin_sound, volume=self.SFX_VOLUME)
             self.score += COIN_VALUE
             if self.has_won():
                 self.win()
@@ -198,6 +203,7 @@ class MyGame(arcade.Window):
             self.die()
 
     def die(self):
+        arcade.play_sound(self.death_sound, volume=self.SFX_VOLUME)
         self.setup()
 
     def has_won(self) -> bool:

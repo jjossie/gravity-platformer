@@ -59,6 +59,7 @@ class Player(arcade.Sprite):
         if key == self.control_set.right:
             self.right_pressed = True
         if key == self.control_set.toggle_gravity:
+            arcade.play_sound(self.window.gravity_sound, volume=self.window.SFX_VOLUME)
             self.invert_pressed = True
             self.gravity_inverted = not self.gravity_inverted
             self.window.initialize_physics(self.gravity_inverted)
@@ -93,6 +94,7 @@ class Player(arcade.Sprite):
             self.coast()
 
         if physics_engine.can_jump() and self.jump_pressed:
+            arcade.play_sound(self.window.jump_sound, volume=self.window.SFX_VOLUME)
             inv_int = -1 if self.gravity_inverted else 1
             self.change_y = PLAYER_JUMP_SPEED * inv_int
 
