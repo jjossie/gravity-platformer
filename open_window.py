@@ -16,19 +16,20 @@ GLOBAL_MUSIC_VOLUME = 0.8
 MAIN_MUSIC_PATH = "sounds/loom_loop.mp3"
 LEVELS = [
     "maps/level_1.tmx",
-    "maps/demo.tmx"
+    "maps/level_2.tmx"
 ]
 
 # Scaling
 TILE_SCALING = 1
 COIN_SCALING = 1
+GRID_PIXEL_SIZE = 70
 
 # Physics
 GRAVITY = 1.5
 
 # Layer Names
 LAYER_NAME_PLAYER = "player"
-LAYER_NAME_ITEMS = "coins"
+LAYER_NAME_COINS = "coins"
 LAYER_NAME_DECORATION = "decoration"
 LAYER_NAME_PLATFORMS = "platforms"
 LAYER_NAME_DEATH = "death"
@@ -55,11 +56,14 @@ class MyGame(arcade.Window):
         self.camera = None
         self.gui_camera = None
         self.tile_map = None
+        self.map_width = 0
+        self.map_height = 0
 
         # Game Logic
         self.score = 0
         self.max_score = 0
         self.level = 0
+        self.won_world = False
 
         # Load sounds
         self.music = arcade.load_sound(MAIN_MUSIC_PATH, True)
@@ -75,23 +79,32 @@ class MyGame(arcade.Window):
     def setup(self):
         """Set up the game here. Call this function to restart the game."""
 
+        # Get Level Map
+        try:
+            map_path = LEVELS[self.level]
+        except IndexError:
+            self.win_world()
+            return
+
         # Set up Arcade Objects
         self.scene = arcade.Scene()
         self.camera = arcade.Camera(self.width, self.height)
         self.gui_camera = arcade.Camera(self.width, self.height)
 
-        # Setup Tile Maps
-        map_path = LEVELS[self.level]
+        # Setup Tile Map
         layer_options = {
             LAYER_NAME_PLATFORMS: {
                 "use_spatial_hash": True
             },
-            LAYER_NAME_ITEMS: {
+            LAYER_NAME_COINS: {
                 "use_spatial_hash": True
             },
-            LAYER_NAME_DECORATION: {
-                "use_spatial_hash": True
-            },
+            # LAYER_NAME_DECORATION: {
+            #     "use_spatial_hash": True
+            # },
+            # LAYER_NAME_BACKGROUND: {
+            #     "use_spatial_hash": True
+            # },
             LAYER_NAME_DEATH: {
                 "use_spatial_hash": True
             }
@@ -99,6 +112,8 @@ class MyGame(arcade.Window):
 
         # Load the tilemap
         self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
+        self.map_width = self.tile_map.width * GRID_PIXEL_SIZE
+        self.map_height = self.tile_map.height * GRID_PIXEL_SIZE
 
         # Initialize Scene with tilemap
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
@@ -114,7 +129,7 @@ class MyGame(arcade.Window):
 
         # Game Logic
         self.score = 0
-        self.max_score = COIN_VALUE * len(self.scene.get_sprite_list(LAYER_NAME_ITEMS))
+        self.max_score = COIN_VALUE * len(self.scene.get_sprite_list(LAYER_NAME_COINS))
 
     def initialize_physics(self, inverted=False):
         """Initialize Physics Engine, allowing for inversion of gravity."""
@@ -139,12 +154,17 @@ class MyGame(arcade.Window):
     def get_camera_position(self, parallax=1):
         screen_center_x = self.player_one.center_x - (self.camera.viewport_width / 2)
         screen_center_y = self.player_one.center_y - (self.camera.viewport_height / 2)
-
-        # Don't let camera travel past 0
+        right_edge = self.map_width - (self.camera.viewport_width / 2) - 250
+        top_edge = self.map_height - (self.camera.viewport_height / 2) - 250
+        # Don't let camera travel past boundaries
         if screen_center_x < 0:
             screen_center_x = 0
         if screen_center_y < 0:
             screen_center_y = 0
+        if screen_center_x > right_edge:
+            screen_center_x = right_edge
+        if screen_center_y > top_edge:
+            screen_center_y = top_edge
 
         return screen_center_x * parallax, screen_center_y * parallax
 
@@ -178,7 +198,10 @@ class MyGame(arcade.Window):
             bold=True
         )
         if self.has_won():
-            success_text = "Stage Complete"
+            if self.won_world:
+                success_text = "World Complete!"
+            else:
+                success_text = "Stage Complete"
             arcade.draw_text(
                 success_text,
                 SCREEN_WIDTH / 2,
@@ -205,7 +228,7 @@ class MyGame(arcade.Window):
 
         # Check for coin collisions
         coin_hit_list = arcade.check_for_collision_with_list(
-            self.player_one, self.scene[LAYER_NAME_ITEMS]
+            self.player_one, self.scene[LAYER_NAME_COINS]
         )
         for coin in coin_hit_list:
             # Remove the coin
@@ -230,10 +253,14 @@ class MyGame(arcade.Window):
         return self.score >= self.max_score
 
     def win(self):
-        print("you win")
+        print("stage complete")
         self.level += 1
-        timer = threading.Timer(3.0, lambda: self.setup())
-        timer.start()
+        # timer = threading.Timer(3.0, lambda: self.setup())
+        # timer.start()
+        self.setup()
+
+    def win_world(self):
+        self.won_world = True
 
 
 def main():
