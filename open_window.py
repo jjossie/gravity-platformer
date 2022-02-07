@@ -1,4 +1,5 @@
 import arcade
+import os
 from player import Player, ControlSet
 
 # Constants
@@ -8,21 +9,26 @@ LAYER_NAME_DEPTH = "depth"
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 768
 SCREEN_TITLE = "Platformer"
-MAIN_MUSIC_PATH = "sounds/loom_loop.mp3"
 GLOBAL_SFX_VOLUME = 0.3
 GLOBAL_MUSIC_VOLUME = 0.8
 
+# Resources
+MAIN_MUSIC_PATH = "sounds/loom_loop.mp3"
+LEVELS = [
+    "maps/level_1.tmx",
+    "maps/demo.tmx"
+]
+
 # Scaling
-TILE_SCALING = 0.5
-COIN_SCALING = 0.5
+TILE_SCALING = 1
+COIN_SCALING = 1
 
 # Physics
-
 GRAVITY = 1.5
 
 # Layer Names
 LAYER_NAME_PLAYER = "player"
-LAYER_NAME_ITEMS = "items"
+LAYER_NAME_ITEMS = "coins"
 LAYER_NAME_BOXES = "boxes"
 LAYER_NAME_PLATFORMS = "platforms"
 LAYER_NAME_DEATH = "death"
@@ -65,7 +71,7 @@ class MyGame(arcade.Window):
         # Play Music
         arcade.play_sound(self.music, volume=GLOBAL_MUSIC_VOLUME, looping=True)
 
-    def setup(self):
+    def setup(self, level_index=0):
         """Set up the game here. Call this function to restart the game."""
 
         # Set up Arcade Objects
@@ -74,7 +80,7 @@ class MyGame(arcade.Window):
         self.gui_camera = arcade.Camera(self.width, self.height)
 
         # Setup Tile Maps
-        map_path = "maps/demo.tmx"
+        map_path = LEVELS[level_index]
         layer_options = {
             LAYER_NAME_PLATFORMS: {
                 "use_spatial_hash": True
@@ -98,8 +104,8 @@ class MyGame(arcade.Window):
 
         # Create Sprites
         self.player_one = Player(self, ControlSet())
-        self.player_one.center_x = 192
-        self.player_one.center_y = 256
+        self.player_one.center_x = 256
+        self.player_one.center_y = 512
         self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_one)
 
         # Initialize Physics Engine
@@ -114,8 +120,7 @@ class MyGame(arcade.Window):
         inv_int = -1 if inverted else 1
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_one, gravity_constant=GRAVITY * inv_int, walls=[
-                self.scene[LAYER_NAME_PLATFORMS],
-                self.scene[LAYER_NAME_BOXES]
+                self.scene[LAYER_NAME_PLATFORMS]
             ]
         )
 
@@ -162,14 +167,30 @@ class MyGame(arcade.Window):
 
     def draw_gui(self):
         """Display to the screen any text we need to."""
-        score_text = f"Score: {self.score}"
+        score_text = f"Score: {self.score}/{self.max_score}"
         arcade.draw_text(
             score_text,
-            10,
-            10,
-            arcade.csscolor.WHITE,
-            18
+            20,
+            20,
+            font_size=24,
+            font_name="calibri",
+            bold=True
         )
+        if self.has_won():
+            success_text = "Stage Complete"
+            arcade.draw_text(
+                success_text,
+                SCREEN_WIDTH / 2,
+                SCREEN_HEIGHT / 2,
+                font_size=48,
+                width=480,
+                align="center",
+                font_name="calibri",
+                bold=True,
+                anchor_x="center",
+                anchor_y="center",
+                multiline=False
+            )
 
     def on_update(self, delta_time):
         """Movement and game logic."""
@@ -187,8 +208,6 @@ class MyGame(arcade.Window):
         )
         for coin in coin_hit_list:
             # Remove the coin
-            val = coin.properties
-            print(val)
             coin.kill()
             arcade.play_sound(self.coin_sound, volume=self.SFX_VOLUME)
             self.score += COIN_VALUE

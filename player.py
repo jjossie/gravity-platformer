@@ -1,8 +1,8 @@
 import arcade
 from dataclasses import dataclass
 
-CHARACTER_SCALING = 0.5
-PLAYER_SPRITE_PATH = "sprites/PNG/Players/128x256/Green/alienGreen_stand.png"
+CHARACTER_SCALING = 0.546875
+PLAYER_SPRITE_PATH = "sprites/PNG/Players/128x256/Green/alienGreen_stand_crop.png"
 
 # PHYSICS
 PLAYER_MOVEMENT_SPEED = 12
