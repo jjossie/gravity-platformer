@@ -1,11 +1,11 @@
 import arcade
-import os
+from time import sleep
+import threading
 from player import Player, ControlSet
 
 # Constants
 
 # Window Options
-LAYER_NAME_DEPTH = "depth"
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 768
 SCREEN_TITLE = "Platformer"
@@ -29,7 +29,7 @@ GRAVITY = 1.5
 # Layer Names
 LAYER_NAME_PLAYER = "player"
 LAYER_NAME_ITEMS = "coins"
-LAYER_NAME_BOXES = "boxes"
+LAYER_NAME_DECORATION = "decoration"
 LAYER_NAME_PLATFORMS = "platforms"
 LAYER_NAME_DEATH = "death"
 LAYER_NAME_BACKGROUND = "background"
@@ -59,6 +59,7 @@ class MyGame(arcade.Window):
         # Game Logic
         self.score = 0
         self.max_score = 0
+        self.level = 0
 
         # Load sounds
         self.music = arcade.load_sound(MAIN_MUSIC_PATH, True)
@@ -71,7 +72,7 @@ class MyGame(arcade.Window):
         # Play Music
         arcade.play_sound(self.music, volume=GLOBAL_MUSIC_VOLUME, looping=True)
 
-    def setup(self, level_index=0):
+    def setup(self):
         """Set up the game here. Call this function to restart the game."""
 
         # Set up Arcade Objects
@@ -80,7 +81,7 @@ class MyGame(arcade.Window):
         self.gui_camera = arcade.Camera(self.width, self.height)
 
         # Setup Tile Maps
-        map_path = LEVELS[level_index]
+        map_path = LEVELS[self.level]
         layer_options = {
             LAYER_NAME_PLATFORMS: {
                 "use_spatial_hash": True
@@ -88,10 +89,10 @@ class MyGame(arcade.Window):
             LAYER_NAME_ITEMS: {
                 "use_spatial_hash": True
             },
-            LAYER_NAME_DEPTH: {
+            LAYER_NAME_DECORATION: {
                 "use_spatial_hash": True
             },
-            LAYER_NAME_BOXES: {
+            LAYER_NAME_DEATH: {
                 "use_spatial_hash": True
             }
         }
@@ -230,7 +231,9 @@ class MyGame(arcade.Window):
 
     def win(self):
         print("you win")
-        pass
+        self.level += 1
+        timer = threading.Timer(3.0, lambda: self.setup())
+        timer.start()
 
 
 def main():
