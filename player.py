@@ -50,6 +50,7 @@ class Player(arcade.Sprite):
 
         # Game Logic
         self.gravity_inverted = False
+        self.facing_right = True
 
     def on_key_press(self, key: int):
         if key == self.control_set.jump:
@@ -79,16 +80,18 @@ class Player(arcade.Sprite):
 
         if self.right_pressed and not self.left_pressed:
             self.apply_acceleration(True)
+            self.facing_right = True
             # Apply right animation
-            self.texture = self.textures[
-                TEXTURE_RIGHT_INVERTED_INDEX if self.gravity_inverted else TEXTURE_RIGHT_INDEX
-            ]
+            # self.texture = self.textures[
+            #     TEXTURE_RIGHT_INVERTED_INDEX if self.gravity_inverted else TEXTURE_RIGHT_INDEX
+            # ]
         elif self.left_pressed and not self.right_pressed:
             self.apply_acceleration(False)
+            self.facing_right = False
             # Apply left animation
-            self.texture = self.textures[
-                TEXTURE_LEFT_INVERTED_INDEX if self.gravity_inverted else TEXTURE_LEFT_INDEX
-            ]
+            # self.texture = self.textures[
+            #     TEXTURE_LEFT_INVERTED_INDEX if self.gravity_inverted else TEXTURE_LEFT_INDEX
+            # ]
 
         else:
             self.coast()
@@ -97,6 +100,8 @@ class Player(arcade.Sprite):
             arcade.play_sound(self.window.jump_sound, volume=self.window.SFX_VOLUME)
             inv_int = -1 if self.gravity_inverted else 1
             self.change_y = PLAYER_JUMP_SPEED * inv_int
+
+        self.update_texture()
 
     def apply_acceleration(self, is_right):
         """Gradually increase the velocity of the player along the x-axis."""
@@ -114,3 +119,13 @@ class Player(arcade.Sprite):
             self.change_x -= PLAYER_ACCELERATION
         elif self.change_x < 0:
             self.change_x += PLAYER_ACCELERATION
+
+    def update_texture(self):
+        if not self.facing_right:
+            self.texture = self.textures[
+                TEXTURE_LEFT_INVERTED_INDEX if self.gravity_inverted else TEXTURE_LEFT_INDEX
+            ]
+        else:
+            self.texture = self.textures[
+                TEXTURE_RIGHT_INVERTED_INDEX if self.gravity_inverted else TEXTURE_RIGHT_INDEX
+            ]
