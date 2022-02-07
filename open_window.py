@@ -1,7 +1,10 @@
 import arcade
-from time import sleep
-import threading
 from player import Player, ControlSet
+
+# These were used to control waiting before switching to the next level, but
+# it was causing unpredictable behavior in update() and setup().
+# import threading
+# from time import sleep
 
 # Constants
 
@@ -45,6 +48,9 @@ class MyGame(arcade.Window):
     """
 
     def __init__(self) -> None:
+        """
+        Initialize this game window.
+        """
         # Create this Arcade Window but do not display it yet
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
@@ -77,12 +83,15 @@ class MyGame(arcade.Window):
         arcade.play_sound(self.music, volume=GLOBAL_MUSIC_VOLUME, looping=True)
 
     def setup(self):
-        """Set up the game here. Call this function to restart the game."""
+        """
+        Set up the game here. Call this function to restart the game.
+        """
 
         # Get Level Map
         try:
             map_path = LEVELS[self.level]
         except IndexError:
+            # If next map is nowhere to be found, assume we are done with all levels.
             self.win_world()
             return
 
@@ -91,7 +100,8 @@ class MyGame(arcade.Window):
         self.camera = arcade.Camera(self.width, self.height)
         self.gui_camera = arcade.Camera(self.width, self.height)
 
-        # Setup Tile Map
+        # Setup Tile Map Options
+        # Only layers that frequently check for collisions use the spatial hash.
         layer_options = {
             LAYER_NAME_PLATFORMS: {
                 "use_spatial_hash": True
@@ -99,12 +109,6 @@ class MyGame(arcade.Window):
             LAYER_NAME_COINS: {
                 "use_spatial_hash": True
             },
-            # LAYER_NAME_DECORATION: {
-            #     "use_spatial_hash": True
-            # },
-            # LAYER_NAME_BACKGROUND: {
-            #     "use_spatial_hash": True
-            # },
             LAYER_NAME_DEATH: {
                 "use_spatial_hash": True
             }
@@ -132,7 +136,10 @@ class MyGame(arcade.Window):
         self.max_score = COIN_VALUE * len(self.scene.get_sprite_list(LAYER_NAME_COINS))
 
     def initialize_physics(self, inverted=False):
-        """Initialize Physics Engine, allowing for inversion of gravity."""
+        """
+        Initialize Physics Engine, allowing for inversion of gravity.
+        :param inverted: True if player is inverting gravity to fall up rather than down.
+        """
         inv_int = -1 if inverted else 1
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_one, gravity_constant=GRAVITY * inv_int, walls=[
@@ -141,17 +148,32 @@ class MyGame(arcade.Window):
         )
 
     def on_key_press(self, key: int, modifiers: int):
-        """Called whenever a key is pressed."""
+        """
+        Called whenever a key is pressed.
+        """
         self.player_one.on_key_press(key)
 
     def on_key_release(self, key: int, modifiers: int):
-        """Called whenever a key is released."""
+        """
+        Called whenever a key is released.
+        """
         self.player_one.on_key_release(key)
 
-    def camera_follow(self, players):
+    def camera_follow(self):
+        """
+        Called each frame to move the camera towards the player.
+        :return: None
+        """
         self.camera.move_to(self.get_camera_position(), 0.1)
 
     def get_camera_position(self, parallax=1):
+        """
+        Determine the new target position of the camera. It will essentially
+        be the player's position plus some constraints. Said constraints are
+        currently only working for the bottom/left of the map, not the top/right.
+        :param parallax: Feature I never got working. Don't worry about it lol
+        :return: A tuple representing the camera's new target coordinates.
+        """
         screen_center_x = self.player_one.center_x - (self.camera.viewport_width / 2)
         screen_center_y = self.player_one.center_y - (self.camera.viewport_height / 2)
         right_edge = self.map_width - (self.camera.viewport_width / 2) - 250
@@ -169,7 +191,9 @@ class MyGame(arcade.Window):
         return screen_center_x * parallax, screen_center_y * parallax
 
     def on_draw(self):
-        """Render the screen."""
+        """
+        Render the screen.
+        """
 
         # Clear the screen to the background color
         arcade.start_render()
@@ -187,7 +211,9 @@ class MyGame(arcade.Window):
         self.draw_gui()
 
     def draw_gui(self):
-        """Display to the screen any text we need to."""
+        """
+        Display to the screen any text we need to.
+        """
         score_text = f"Score: {self.score}/{self.max_score}"
         arcade.draw_text(
             score_text,
@@ -217,14 +243,16 @@ class MyGame(arcade.Window):
             )
 
     def on_update(self, delta_time):
-        """Movement and game logic."""
+        """
+        Movement and game logic.
+        """
 
         # Move the player with the physics engine.
         self.player_one.update_speed(self.physics_engine)
         self.physics_engine.update()
 
         # Center the camera on the player.
-        self.camera_follow([self.player_one])
+        self.camera_follow()
 
         # Check for coin collisions
         coin_hit_list = arcade.check_for_collision_with_list(
@@ -246,13 +274,27 @@ class MyGame(arcade.Window):
             self.die()
 
     def die(self):
+        """
+        Play a death sound and restart the level.
+        :return: None
+        """
         arcade.play_sound(self.death_sound, volume=self.SFX_VOLUME)
         self.setup()
 
     def has_won(self) -> bool:
+        """
+        Return true if the player's score has reached the max score for the level.
+        i.e. if the player has collected all the coins/items
+        :return: True if player has finished collecting, false if not.
+        """
         return self.score >= self.max_score
 
     def win(self):
+        """
+        Increment the level and set up the game again. Tried introducing a wait call
+        to keep the friendly success message on the screen for longer but was unsuccessful.
+        :return: None
+        """
         print("stage complete")
         self.level += 1
         # timer = threading.Timer(3.0, lambda: self.setup())
@@ -260,10 +302,18 @@ class MyGame(arcade.Window):
         self.setup()
 
     def win_world(self):
+        """
+        Declare that the player has finished all maps/levels available.
+        :return: None
+        """
         self.won_world = True
 
 
 def main():
+    """
+    Start the window and run arcade.
+    :return: None
+    """
     window = MyGame()
     window.setup()
     arcade.run()
