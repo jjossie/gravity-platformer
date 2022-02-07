@@ -205,7 +205,7 @@ class MyGame(arcade.Window):
             arcade.draw_text(
                 success_text,
                 SCREEN_WIDTH / 2,
-                SCREEN_HEIGHT / 2,
+                SCREEN_HEIGHT / 2 + 240,
                 font_size=48,
                 width=480,
                 align="center",
