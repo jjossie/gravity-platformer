@@ -10,7 +10,7 @@ This was my first venture into the Python Arcade library, which proved to be sur
 
 * [Python 3.10](https://www.python.org/)
 * [Python Arcade](https://api.arcade.academy/en/latest/)
-* JetBrains PyCharm 2021.3.2
+* [JetBrains PyCharm 2021.3.2](https://www.jetbrains.com/pycharm/)
 * [Tiled Map Editor](https://www.mapeditor.org/)
 
 # Useful Websites
