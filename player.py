@@ -4,7 +4,7 @@ from dataclasses import dataclass
 # Physics
 PLAYER_MOVEMENT_SPEED = 12
 PLAYER_ACCELERATION = 1
-PLAYER_JUMP_SPEED = 25
+PLAYER_JUMP_SPEED = 20
 
 # Textures
 PLAYER_SPRITE_PATH = "sprites/PNG/Players/128x256/Green/alienGreen_stand_crop.png"

@@ -28,7 +28,7 @@ COIN_SCALING = 1
 GRID_PIXEL_SIZE = 70
 
 # Physics
-GRAVITY = 1.5
+GRAVITY = 1
 
 # Layer Names
 LAYER_NAME_PLAYER = "player"

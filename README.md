@@ -4,7 +4,7 @@ This game is a simple platformer with a special mechanic that allows you to inve
 
 This was my first venture into the Python Arcade library, which proved to be surprisingly easy to get started with.
 
-<!-- [Software Demo Video](http://youtube.link.goes.here) -->
+[Demonstration Video](https://youtu.be/uI5ChUr8NVw)
 
 # Development Environment
 
